@@ -1,15 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Split or Steal Game</title>
+  <meta charset="UTF-8">
+  <title>Owner Page</title>
 </head>
 <body>
-  <h1>Welcome to Split or Steal 🎭</h1>
-  <p>Select your role:</p>
-  <ul>
-    <li><a href="player1.html">Player 1</a></li>
-    <li><a href="player2.html">Player 2</a></li>
-    <li><a href="owner.html">Owner</a></li>
-  </ul>
+  <h2>Owner - Results</h2>
+  <div id="results">Waiting for players...</div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBSYlremqGklYSS2Jxg40O4wtsA4mreIvE",
+  authDomain: "split-or-steal-52057.firebaseapp.com",
+  databaseURL: "https://split-or-steal-52057-default-rtdb.firebaseio.com",
+  projectId: "split-or-steal-52057",
+  storageBucket: "split-or-steal-52057.firebasestorage.app",
+  messagingSenderId: "570402527893",
+  appId: "1:570402527893:web:1e7545a03a613eb08e999c",
+  measurementId: "G-CZTFXPWE2B"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const resultsDiv = document.getElementById("results");
+
+    function getOutcome(p1, p2) {
+      if (!p1 || !p2) return "Waiting for both players...";
+
+      if (p1.choice === "split" && p2.choice === "split") return "Both split! They share.";
+      if (p1.choice === "steal" && p2.choice === "split") return `${p1.name} steals everything!`;
+      if (p1.choice === "split" && p2.choice === "steal") return `${p2.name} steals everything!`;
+      if (p1.choice === "steal" && p2.choice === "steal") return "Both stole. Nobody wins.";
+    }
+
+    db.ref("game").on("value", (snap) => {
+      const data = snap.val();
+      const p1 = data?.player1;
+      const p2 = data?.player2;
+
+      resultsDiv.innerHTML = `
+        <p>Player 1: ${p1 ? p1.name + " (" + p1.choice + ")" : "Waiting..."}</p>
+        <p>Player 2: ${p2 ? p2.name + " (" + p2.choice + ")" : "Waiting..."}</p>
+        <h3>${getOutcome(p1, p2)}</h3>
+      `;
+    });
+  </script>
 </body>
 </html>
