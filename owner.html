@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Owner - Split or Steal Results</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+</head>
+<body>
+  <h2>Owner Panel - Split or Steal Results</h2>
+
+  <div>
+    <p><strong>Player 1:</strong> <span id="p1Name">Waiting...</span> | Choice: <span id="p1Choice">---</span></p>
+    <p><strong>Player 2:</strong> <span id="p2Name">Waiting...</span> | Choice: <span id="p2Choice">---</span></p>
+  </div>
+
+  <h3>Result: <span id="result">Waiting for both players...</span></h3>
+
+  <button onclick="resetGame()">Reset Game</button>
+
+  <script>
+    // Paste your Firebase config here ↓
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database(app);
+
+    const p1NameEl = document.getElementById("p1Name");
+    const p1ChoiceEl = document.getElementById("p1Choice");
+    const p2NameEl = document.getElementById("p2Name");
+    const p2ChoiceEl = document.getElementById("p2Choice");
+    const resultEl = document.getElementById("result");
+
+    let player1 = null;
+    let player2 = null;
+
+    // Listen for Player 1 data
+    firebase.database().ref("game/player1").on("value", (snapshot) => {
+      player1 = snapshot.val();
+      if (player1) {
+        p1NameEl.textContent = player1.name;
+        p1ChoiceEl.textContent = player1.choice;
+      }
+      checkResult();
+    });
+
+    // Listen for Player 2 data
+    firebase.database().ref("game/player2").on("value", (snapshot) => {
+      player2 = snapshot.val();
+      if (player2) {
+        p2NameEl.textContent = player2.name;
+        p2ChoiceEl.textContent = player2.choice;
+      }
+      checkResult();
+    });
+
+    function checkResult() {
+      if (!player1 || !player2) return;
+
+      if (player1.choice === "split" && player2.choice === "split") {
+        resultEl.textContent = "Both players split! They share the prize 🎉";
+      } else if (player1.choice === "steal" && player2.choice === "steal") {
+        resultEl.textContent = "Both players tried to steal. They both get NOTHING ❌";
+      } else if (player1.choice === "split" && player2.choice === "steal") {
+        resultEl.textContent = player2.name + " stole everything! 💰";
+      } else if (player1.choice === "steal" && player2.choice === "split") {
+        resultEl.textContent = player1.name + " stole everything! 💰";
+      }
+    }
+
+    function resetGame() {
+      firebase.database().ref("game").set({
+        player1: null,
+        player2: null
+      });
+      resultEl.textContent = "Waiting for both players...";
+      p1NameEl.textContent = "Waiting...";
+      p1ChoiceEl.textContent = "---";
+      p2NameEl.textContent = "Waiting...";
+      p2ChoiceEl.textContent = "---";
+    }
+  </script>
+</body>
+</html>
